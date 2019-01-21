@@ -100,7 +100,7 @@ const getSumOfHighInterests = () => {
         obj[x.state] = parseInt(x.amount, 10);
       }
     });
-  console.log(obj);
+  // console.log(obj);
   const sum = Object.entries(obj)
     .map(x => {
       // console.log("x: ", x);
@@ -156,16 +156,31 @@ const higherStateSums = getHigherStateSums();
   if true set `areStatesInHigherStateSum` to `true`
   otherwise set it to `false`
  */
-const getSumOfHighStates = () => {
-  return dataset.bankBalances
-    .filter(x => arrHighStates.includes(x.state))
-    .map(x => {
-      const amt = parseInt(x.amount, 10);
-      // return Math.round(amt * 0.189);
-    })
-    .reduce((acc, cur) => acc + cur, 0);
+
+const isGreaterThan2550000 = item => {
+  if (parseInt(item[1], 10) > parseInt(2550000, 10)) {
+    return true;
+  } else {
+    return false;
+  }
 };
-var areStatesInHigherStateSum = null;
+const getHighStatesWithSums = () => {
+  const objAll = getStateSums();
+  // console.log(objAll);
+  // filter down to only high state category
+  const arrHighStatesWithSums = Object.entries(objAll).filter(x =>
+    arrHighStates.includes(x[0])
+  );
+  return arrHighStatesWithSums;
+};
+const areHighStatesGreaterThan2550000 = () => {
+  const arrHighStatesWithSums = getHighStatesWithSums();
+
+  // use .every to see if they > 2,550,000
+  return arrHighStatesWithSums.every(isGreaterThan2550000);
+};
+
+const areStatesInHigherStateSum = areHighStatesGreaterThan2550000();
 
 /*
   Stretch Goal && Final Boss
@@ -181,7 +196,14 @@ var areStatesInHigherStateSum = null;
   have a sum of account values greater than 2,550,000
   otherwise set it to be `false`
  */
-var anyStatesInHigherStateSum = null;
+
+const areAnyHighStatesGreaterThan2550000 = () => {
+  const arrHighStatesWithSums = getHighStatesWithSums();
+
+  // use .every to see if they > 2,550,000
+  return arrHighStatesWithSums.some(isGreaterThan2550000);
+};
+var anyStatesInHigherStateSum = areAnyHighStatesGreaterThan2550000();
 
 module.exports = {
   hundredThousandairs: hundredThousandairs,
