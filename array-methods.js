@@ -1,14 +1,25 @@
-var dataset = require('./dataset.json');
-
+var dataset = require("./dataset.json");
+// console.log(dataset);
 /*
   create an array with accounts from bankBalances that are
   greater than 100000
   assign the resulting new array to `hundredThousandairs`
 */
-var hundredThousandairs = null;
+const getHigherAmt = x => x.amount > 100000;
+const hundredThousandairs = dataset.bankBalances.filter(getHigherAmt);
 
 // set sumOfBankBalances to be the sum of all value held at `amount` for each bank object
-var sumOfBankBalances = null;
+// const sumOfBankBalances = dataset.bankBalances.reduce((acc, obj) => {
+//   // console.log(obj.amount / 100, Math.round(obj.amount));
+//   acc + parseInt(obj.amount, 10);
+// }, 0);
+// debugger;
+// console.log(sumOfBankBalances);
+const arrBalances = dataset.bankBalances.map(x => {
+  return parseInt(x.amount, 10);
+});
+
+const sumOfBankBalances = arrBalances.reduce((acc, cur) => acc + cur, 0);
 
 /*
   from each of the following states:
@@ -21,8 +32,17 @@ var sumOfBankBalances = null;
   take each `amount` and add 18.9% interest to it rounded to the nearest dollar 
   and then sum it all up into one value saved to `sumOfInterests`
  */
-var sumOfInterests = null;
-
+const arrHighStates = ["WI", "IL", "WY", "OH", "GA", "DE"];
+const getSumOfInterests = () => {
+  return dataset.bankBalances
+    .filter(x => arrHighStates.includes(x.state))
+    .map(x => {
+      const amt = parseInt(x.amount, 10);
+      return Math.round(amt * 0.189);
+    })
+    .reduce((acc, cur) => acc + cur, 0);
+};
+const sumOfInterests = getSumOfInterests();
 /*
   aggregate the sum of bankBalance amounts
   grouped by state
@@ -39,7 +59,18 @@ var sumOfInterests = null;
     round this number to the nearest dollar before moving on.
   )
  */
-var stateSums = null;
+const getStateSums = () => {
+  const obj = {};
+  dataset.bankBalances.forEach(x => {
+    if (obj.hasOwnProperty(x.state)) {
+      obj[x.state] += parseInt(x.amount, 10);
+    } else {
+      obj[x.state] = parseInt(x.amount, 10);
+    }
+  });
+  return obj;
+};
+const stateSums = getStateSums();
 
 /*
   for all states *NOT* in the following states:
@@ -54,24 +85,61 @@ var stateSums = null;
   sum the interest values that are greater than 50,000 and save it to `sumOfHighInterests`
 
   note: During your summation (
-    if at any point durig your calculation where the number looks like `2486552.9779399997`
+    if at any point during your calculation where the number looks like `2486552.9779399997`
     round this number to the nearest dollar before moving on.
   )
  */
-var sumOfHighInterests = null;
+const getSumOfHighInterests = () => {
+  const obj = {};
+  dataset.bankBalances
+    .filter(x => !arrHighStates.includes(x.state))
+    .forEach(x => {
+      if (obj.hasOwnProperty(x.state)) {
+        obj[x.state] += parseInt(x.amount, 10);
+      } else {
+        obj[x.state] = parseInt(x.amount, 10);
+      }
+    });
+  // console.log(obj);
+  const sum = Object.entries(obj)
+    .map(x => {
+      // console.log("x: ", x);
+      // console.log("x: ", x, Math.round(parseInt(x[1], 10) * 0.189));
+      return Math.round(parseInt(x[1], 10) * 0.189);
+    })
+    // console.log(arrVal);
+    .filter(x => x > 50000)
+    .reduce((acc, cur) => acc + cur, 0);
+  // console.log(sum);
+  return sum;
+};
+const sumOfHighInterests = getSumOfHighInterests();
 
 /*
   set `lowerSumStates` to be an array of two letter state
   abbreviations of each state where the sum of amounts
   in the state is less than 1,000,000
  */
-var lowerSumStates = null;
+const getLowerSumStates = () => {
+  obj = getStateSums();
+  return Object.entries(obj)
+    .filter(x => x[1] < 1000000)
+    .map(x => x[0]);
+};
+const lowerSumStates = getLowerSumStates();
 
 /*
   aggregate the sum of each state into one hash table
   `higherStateSums` should be the sum of all states with totals greater than 1,000,000
  */
-var higherStateSums = null;
+const getHigherStateSums = () => {
+  const objAll = getStateSums();
+  return Object.entries(objAll)
+    .filter(x => x[1] > 1000000)
+    .map(x => x[1])
+    .reduce((acc, cur) => acc + cur, 0);
+};
+const higherStateSums = getHigherStateSums();
 
 /*
   from each of the following states:
@@ -88,7 +156,31 @@ var higherStateSums = null;
   if true set `areStatesInHigherStateSum` to `true`
   otherwise set it to `false`
  */
-var areStatesInHigherStateSum = null;
+
+const isGreaterThan2550000 = item => {
+  if (parseInt(item[1], 10) > parseInt(2550000, 10)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+const getHighStatesWithSums = () => {
+  const objAll = getStateSums();
+  // console.log(objAll);
+  // filter down to only high state category
+  const arrHighStatesWithSums = Object.entries(objAll).filter(x =>
+    arrHighStates.includes(x[0])
+  );
+  return arrHighStatesWithSums;
+};
+const areHighStatesGreaterThan2550000 = () => {
+  const arrHighStatesWithSums = getHighStatesWithSums();
+
+  // use .every to see if they > 2,550,000
+  return arrHighStatesWithSums.every(isGreaterThan2550000);
+};
+
+const areStatesInHigherStateSum = areHighStatesGreaterThan2550000();
 
 /*
   Stretch Goal && Final Boss
@@ -104,17 +196,23 @@ var areStatesInHigherStateSum = null;
   have a sum of account values greater than 2,550,000
   otherwise set it to be `false`
  */
-var anyStatesInHigherStateSum = null;
 
+const areAnyHighStatesGreaterThan2550000 = () => {
+  const arrHighStatesWithSums = getHighStatesWithSums();
+
+  // use .every to see if they > 2,550,000
+  return arrHighStatesWithSums.some(isGreaterThan2550000);
+};
+var anyStatesInHigherStateSum = areAnyHighStatesGreaterThan2550000();
 
 module.exports = {
-  hundredThousandairs : hundredThousandairs,
-  sumOfBankBalances : sumOfBankBalances,
-  sumOfInterests : sumOfInterests,
-  sumOfHighInterests : sumOfHighInterests,
-  stateSums : stateSums,
-  lowerSumStates : lowerSumStates,
-  higherStateSums : higherStateSums,
-  areStatesInHigherStateSum : areStatesInHigherStateSum,
-  anyStatesInHigherStateSum : anyStatesInHigherStateSum
+  hundredThousandairs: hundredThousandairs,
+  sumOfBankBalances: sumOfBankBalances,
+  sumOfInterests: sumOfInterests,
+  sumOfHighInterests: sumOfHighInterests,
+  stateSums: stateSums,
+  lowerSumStates: lowerSumStates,
+  higherStateSums: higherStateSums,
+  areStatesInHigherStateSum: areStatesInHigherStateSum,
+  anyStatesInHigherStateSum: anyStatesInHigherStateSum
 };
